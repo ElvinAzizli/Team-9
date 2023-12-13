@@ -1,5 +1,8 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class MovieDatabase {
     private Map<String, Movie> movies;
@@ -29,5 +32,31 @@ public class MovieDatabase {
               .append(movie.getRunningTime()).append("min\n");
         }
         return sb.toString();
+    }
+
+    public void loadMoviesFromCSV(String filePath) {
+        try {
+            File file = new File(filePath);
+            Scanner scanner = new Scanner(file);
+            boolean isFirstLine = true;
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (isFirstLine) {
+                    isFirstLine = false;
+                    continue;
+                }
+
+                String[] details = line.split(",");
+                if (details.length == 4) {
+                    try {
+                        addMovie(new Movie(details[0], details[1], Integer.parseInt(details[2].trim()), Integer.parseInt(details[3].trim())));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+            scanner.close();
+        } catch (FileNotFoundException ignored) {
+        }
     }
 }
