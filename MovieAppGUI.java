@@ -14,9 +14,7 @@ public class MovieAppGUI {
     }
 
     private void populateSampleData() {
-        movieDatabase.addMovie(new Movie("The Shawshank Redemption", "Frank Darabont", 1994, 142));
-        movieDatabase.addMovie(new Movie("The Godfather", "Francis Ford Coppola", 1972, 175));
-        movieDatabase.addMovie(new Movie("The Dark Knight", "Christopher Nolan", 2008, 152));
+        movieDatabase.loadMoviesFromCSV("DataBase.csv");
     }
 
     private void createAndShowGUI() {
@@ -65,7 +63,7 @@ public class MovieAppGUI {
             JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         Movie newMovie = new Movie(title, director, year, time);
         movieDatabase.addMovie(newMovie);
         updateMovieListArea();
