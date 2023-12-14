@@ -9,12 +9,7 @@ public class MovieAppGUI {
 
     public MovieAppGUI() {
         movieDatabase = new MovieDatabase();
-        populateSampleData();
-        createAndShowGUI();
-    }
-
-    private void populateSampleData() {
-        movieDatabase.loadMoviesFromCSV("DataBase.csv");
+        createLoginWindow();
     }
 
     private void createAndShowGUI() {
@@ -51,6 +46,36 @@ public class MovieAppGUI {
         frame.setVisible(true);
     }
 
+    private void createLoginWindow() {
+        JFrame loginFrame = new JFrame("Login");
+        JTextField usernameField = new JTextField(20);
+        JPasswordField passwordField = new JPasswordField(20);
+        JButton loginButton = new JButton("Login");
+
+        loginButton.addActionListener(e -> handleLogin(usernameField.getText(), new String(passwordField.getPassword()), loginFrame));
+
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Username:"));
+        panel.add(usernameField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passwordField);
+        panel.add(loginButton);
+
+        loginFrame.getContentPane().add(panel);
+        loginFrame.pack();
+        loginFrame.setLocationRelativeTo(null);
+        loginFrame.setVisible(true);
+    }
+
+    private void handleLogin(String username, String password, JFrame loginFrame) {
+        if (username.equals("admin") && password.equals("password")) {
+            loginFrame.dispose();
+            createAndShowGUI();
+        } else {
+            JOptionPane.showMessageDialog(loginFrame, "Wrong username or password", "Login Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void addMovie() {
         String title = movieTitleField.getText();
         String director = movieDirectorField.getText();
@@ -63,7 +88,7 @@ public class MovieAppGUI {
             JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         Movie newMovie = new Movie(title, director, year, time);
         movieDatabase.addMovie(newMovie);
         updateMovieListArea();
@@ -74,10 +99,6 @@ public class MovieAppGUI {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new MovieAppGUI();
-            }
-        });
+        SwingUtilities.invokeLater(() -> new MovieAppGUI());
     }
 }
