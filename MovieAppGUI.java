@@ -16,8 +16,12 @@ public class MovieAppGUI {
     private void showLoginScreen() {
         frame = new JFrame("Login");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 150);
-        frame.setLayout(new FlowLayout());
+        frame.setSize(400, 400);
+        frame.setLayout(new GridBagLayout());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridwidth = GridBagConstraints.REMAINDER;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
 
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
@@ -33,17 +37,19 @@ public class MovieAppGUI {
             }
         });
 
-        frame.add(new JLabel("Username:"));
-        frame.add(usernameField);
-        frame.add(new JLabel("Password:"));
-        frame.add(passwordField);
-        frame.add(loginButton);
+        constraints.insets = new Insets(10, 0, 5, 0);
+        frame.add(new JLabel("Username:"), constraints);
+        frame.add(usernameField, constraints);
+        frame.add(new JLabel("Password:"), constraints);
+        frame.add(passwordField, constraints);
+        constraints.insets = new Insets(10, 0, 10, 0);
+        frame.add(loginButton, constraints);
 
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
     private boolean authenticate(String username, String password) {
-        // Simple hardcoded authentication
         return "admin".equals(username) && "password".equals(password);
     }
 
