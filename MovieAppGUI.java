@@ -25,8 +25,8 @@ public class MovieAppGUI {
 
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
-        JButton loginButton = new JButton("Login");
 
+        JButton loginButton = new JButton("Login");
         loginButton.addActionListener(e -> {
             if (authenticate(usernameField.getText(), new String(passwordField.getPassword()))) {
                 frame.dispose();
@@ -42,6 +42,9 @@ public class MovieAppGUI {
         frame.add(usernameField, constraints);
         frame.add(new JLabel("Password:"), constraints);
         frame.add(passwordField, constraints);
+
+        constraints.fill = GridBagConstraints.NONE;
+        constraints.anchor = GridBagConstraints.CENTER;
         constraints.insets = new Insets(10, 0, 10, 0);
         frame.add(loginButton, constraints);
 
@@ -58,7 +61,7 @@ public class MovieAppGUI {
     }
 
     private void createAndShowGUI() {
-        frame = new JFrame("Classic Movie Catalog");
+        frame = new JFrame("Movie Catalog");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
 
