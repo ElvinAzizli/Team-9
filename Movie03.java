@@ -1,10 +1,10 @@
-public class Movie02 {
+public class Movie03 {
     private String title;
     private String director;
     private int releaseYear;
-    private int runningTime; // in minutes
+    private int runningTime;
 
-    public Movie02(String title, String director, int releaseYear, int runningTime) {
+    public Movie03(String title, String director, int releaseYear, int runningTime) {
         this.title = title;
         this.director = director;
         this.releaseYear = releaseYear;
