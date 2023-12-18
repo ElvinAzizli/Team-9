@@ -4,8 +4,6 @@ import java.awt.*;
 public class MovieAppGUI {
     private MovieDatabase movieDatabase;
     private JFrame frame;
-    private JTextField movieTitleField, movieDirectorField, movieYearField, movieTimeField, usernameField;
-    private JPasswordField passwordField;
     private JTextArea movieListArea;
 
     public MovieAppGUI() {
@@ -23,8 +21,8 @@ public class MovieAppGUI {
         constraints.gridwidth = GridBagConstraints.REMAINDER;
         constraints.fill = GridBagConstraints.HORIZONTAL;
 
-        usernameField = new JTextField(20);
-        passwordField = new JPasswordField(20);
+        JTextField usernameField = new JTextField(20);
+        JPasswordField passwordField = new JPasswordField(20);
 
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener(e -> {
@@ -45,7 +43,7 @@ public class MovieAppGUI {
 
         constraints.fill = GridBagConstraints.NONE;
         constraints.anchor = GridBagConstraints.CENTER;
-        constraints.insets = new Insets(10, 0, 10, 0);
+        constraints.insets = new Insets(10, 0, 0, 0);
         frame.add(loginButton, constraints);
 
         frame.setLocationRelativeTo(null);
@@ -65,25 +63,13 @@ public class MovieAppGUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
 
-        movieTitleField = new JTextField(20);
-        movieDirectorField = new JTextField(20);
-        movieYearField = new JTextField(20);
-        movieTimeField = new JTextField(20);
         JButton addButton = new JButton("Add New Movie");
         movieListArea = new JTextArea(10, 40);
         movieListArea.setEditable(false);
 
-        addButton.addActionListener(e -> addMovie());
+        addButton.addActionListener(e -> addMovieDialog());
 
         JPanel inputPanel = new JPanel();
-        inputPanel.add(new JLabel("Title:"));
-        inputPanel.add(movieTitleField);
-        inputPanel.add(new JLabel("Director:"));
-        inputPanel.add(movieDirectorField);
-        inputPanel.add(new JLabel("Year:"));
-        inputPanel.add(movieYearField);
-        inputPanel.add(new JLabel("Running Time:"));
-        inputPanel.add(movieTimeField);
         inputPanel.add(addButton);
         inputPanel.setLayout(new FlowLayout());
 
@@ -94,22 +80,37 @@ public class MovieAppGUI {
         frame.setVisible(true);
     }
 
-    private void addMovie() {
-        String title = movieTitleField.getText();
-        String director = movieDirectorField.getText();
-        int year;
-        int time;
-        try {
-            year = Integer.parseInt(movieYearField.getText());
-            time = Integer.parseInt(movieTimeField.getText());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+    private void addMovieDialog() {
+        JTextField titleField = new JTextField(20);
+        JTextField directorField = new JTextField(20);
+        JTextField yearField = new JTextField(20);
+        JTextField timeField = new JTextField(20);
 
-        Movie newMovie = new Movie(title, director, year, time);
-        movieDatabase.addMovie(newMovie);
-        updateMovieListArea();
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Title:"));
+        panel.add(titleField);
+        panel.add(new JLabel("Director:"));
+        panel.add(directorField);
+        panel.add(new JLabel("Year:"));
+        panel.add(yearField);
+        panel.add(new JLabel("Running Time:"));
+        panel.add(timeField);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Add a New Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String title = titleField.getText();
+                String director = directorField.getText();
+                int year = Integer.parseInt(yearField.getText());
+                int time = Integer.parseInt(timeField.getText());
+
+                Movie newMovie = new Movie(title, director, year, time);
+                movieDatabase.addMovie(newMovie);
+                updateMovieListArea();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void updateMovieListArea() {
