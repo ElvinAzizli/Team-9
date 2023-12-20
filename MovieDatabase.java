@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -59,5 +60,24 @@ public class MovieDatabase {
         } catch (FileNotFoundException ignored) {
         }
     }
+
+    public void saveMoviesToCSV(String filePath) {
+        try {
+            PrintWriter writer = new PrintWriter(new File(filePath));
+            writer.println("Title,Director,ReleaseYear,RunningTime");
+            for (Movie movie : movies.values()) {
+                writer.println(movie.getTitle() + "," + movie.getDirector() + "," + movie.getReleaseYear() + "," + movie.getRunningTime());
+            }
+            writer.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateMovie(Movie oldMovie, Movie newMovie) {
+        movies.remove(oldMovie.getTitle());
+        movies.put(newMovie.getTitle(), newMovie);
+    }
 }
+
 
