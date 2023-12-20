@@ -65,15 +65,18 @@ public class MovieAppGUI {
 
         JButton addButton = new JButton("Add New Movie");
         JButton editButton = new JButton("Edit Movie");
+        JButton deleteButton = new JButton("Delete Movie");
         movieListArea = new JTextArea(10, 40);
         movieListArea.setEditable(false);
 
         addButton.addActionListener(e -> addMovieDialog());
         editButton.addActionListener(e -> editMovieDialog());
+        deleteButton.addActionListener(e -> deleteMovieDialog());
 
         JPanel inputPanel = new JPanel();
         inputPanel.add(addButton);
         inputPanel.add(editButton);
+        inputPanel.add(deleteButton);
         inputPanel.setLayout(new FlowLayout());
 
         frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
@@ -112,7 +115,7 @@ public class MovieAppGUI {
                 Movie newMovie = new Movie(title, director, year, time);
                 movieDatabase.addMovie(newMovie);
                 updateMovieListArea();
-                movieDatabase.saveMoviesToCSV("DataBase.csv"); // Save the new movie to the CSV
+                movieDatabase.saveMoviesToCSV("DataBase.csv");
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -144,13 +147,30 @@ public class MovieAppGUI {
                 try {
                     movieDatabase.updateMovie(movieToEdit, new Movie(titleField.getText(), directorField.getText(), Integer.parseInt(yearField.getText()), Integer.parseInt(timeField.getText())));
                     updateMovieListArea();
-                    movieDatabase.saveMoviesToCSV("DataBase.csv"); // Save the edited movie to the CSV
+                    movieDatabase.saveMoviesToCSV("DataBase.csv");
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } else {
             JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void deleteMovieDialog() {
+        String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to delete:");
+        if (movieTitle != null && !movieTitle.trim().isEmpty()) {
+            Movie movie = movieDatabase.getMovie(movieTitle);
+            if (movie != null) {
+                int result = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete \"" + movieTitle + "\"?", "Delete Movie", JOptionPane.YES_NO_OPTION);
+                if (result == JOptionPane.YES_OPTION) {
+                    movieDatabase.removeMovie(movieTitle);
+                    updateMovieListArea();
+                    movieDatabase.saveMoviesToCSV("DataBase.csv");
+                }
+            } else {
+                JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
