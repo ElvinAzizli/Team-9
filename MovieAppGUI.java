@@ -3,11 +3,13 @@ import java.awt.*;
 
 public class MovieAppGUI {
     private MovieDatabase movieDatabase;
+    private UserManager userManager;
     private JFrame frame;
     private JTextArea movieListArea;
 
     public MovieAppGUI() {
         movieDatabase = new MovieDatabase();
+        userManager = new UserManager();
         showLoginScreen();
     }
 
@@ -23,10 +25,10 @@ public class MovieAppGUI {
 
         JTextField usernameField = new JTextField(20);
         JPasswordField passwordField = new JPasswordField(20);
-
         JButton loginButton = new JButton("Login");
+
         loginButton.addActionListener(e -> {
-            if (authenticate(usernameField.getText(), new String(passwordField.getPassword()))) {
+            if (userManager.authenticate(usernameField.getText(), new String(passwordField.getPassword()))) {
                 frame.dispose();
                 populateSampleData();
                 createAndShowGUI();
@@ -50,10 +52,6 @@ public class MovieAppGUI {
         frame.setVisible(true);
     }
 
-    private boolean authenticate(String username, String password) {
-        return "admin".equals(username) && "password".equals(password);
-    }
-
     private void populateSampleData() {
         movieDatabase.loadMoviesFromCSV("DataBase.csv");
     }
@@ -61,22 +59,28 @@ public class MovieAppGUI {
     private void createAndShowGUI() {
         frame = new JFrame("Movie Catalog");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
+        frame.setSize(800, 400);
 
         JButton addButton = new JButton("Add New Movie");
         JButton editButton = new JButton("Edit Movie");
         JButton deleteButton = new JButton("Delete Movie");
+        JButton newUserButton = new JButton("New User");
+        JButton deleteUserButton = new JButton("Delete User");
         movieListArea = new JTextArea(10, 40);
         movieListArea.setEditable(false);
 
         addButton.addActionListener(e -> addMovieDialog());
         editButton.addActionListener(e -> editMovieDialog());
         deleteButton.addActionListener(e -> deleteMovieDialog());
+        newUserButton.addActionListener(e -> newUserDialog());
+        deleteUserButton.addActionListener(e -> deleteUserDialog());
 
         JPanel inputPanel = new JPanel();
         inputPanel.add(addButton);
         inputPanel.add(editButton);
         inputPanel.add(deleteButton);
+        inputPanel.add(newUserButton);
+        inputPanel.add(deleteUserButton);
         inputPanel.setLayout(new FlowLayout());
 
         frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
@@ -115,7 +119,6 @@ public class MovieAppGUI {
                 Movie newMovie = new Movie(title, director, year, time);
                 movieDatabase.addMovie(newMovie);
                 updateMovieListArea();
-                movieDatabase.saveMoviesToCSV("DataBase.csv");
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -124,36 +127,37 @@ public class MovieAppGUI {
 
     private void editMovieDialog() {
         String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to edit:");
-        Movie movieToEdit = movieDatabase.getMovie(movieTitle);
+        if (movieTitle != null && !movieTitle.trim().isEmpty()) {
+            Movie movieToEdit = movieDatabase.getMovie(movieTitle);
 
-        if (movieToEdit != null) {
-            JTextField titleField = new JTextField(movieToEdit.getTitle(), 20);
-            JTextField directorField = new JTextField(movieToEdit.getDirector(), 20);
-            JTextField yearField = new JTextField(String.valueOf(movieToEdit.getReleaseYear()), 20);
-            JTextField timeField = new JTextField(String.valueOf(movieToEdit.getRunningTime()), 20);
+            if (movieToEdit != null) {
+                JTextField titleField = new JTextField(movieToEdit.getTitle(), 20);
+                JTextField directorField = new JTextField(movieToEdit.getDirector(), 20);
+                JTextField yearField = new JTextField(String.valueOf(movieToEdit.getReleaseYear()), 20);
+                JTextField timeField = new JTextField(String.valueOf(movieToEdit.getRunningTime()), 20);
 
-            JPanel panel = new JPanel(new GridLayout(0, 1));
-            panel.add(new JLabel("Title:"));
-            panel.add(titleField);
-            panel.add(new JLabel("Director:"));
-            panel.add(directorField);
-            panel.add(new JLabel("Year:"));
-            panel.add(yearField);
-            panel.add(new JLabel("Running Time:"));
-            panel.add(timeField);
+                JPanel panel = new JPanel(new GridLayout(0, 1));
+                panel.add(new JLabel("Title:"));
+                panel.add(titleField);
+                panel.add(new JLabel("Director:"));
+                panel.add(directorField);
+                panel.add(new JLabel("Year:"));
+                panel.add(yearField);
+                panel.add(new JLabel("Running Time:"));
+                panel.add(timeField);
 
-            int result = JOptionPane.showConfirmDialog(frame, panel, "Edit Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    movieDatabase.updateMovie(movieToEdit, new Movie(titleField.getText(), directorField.getText(), Integer.parseInt(yearField.getText()), Integer.parseInt(timeField.getText())));
-                    updateMovieListArea();
-                    movieDatabase.saveMoviesToCSV("DataBase.csv");
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
+                int result = JOptionPane.showConfirmDialog(frame, panel, "Edit Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        movieDatabase.updateMovie(movieToEdit, new Movie(titleField.getText(), directorField.getText(), Integer.parseInt(yearField.getText()), Integer.parseInt(timeField.getText())));
+                        updateMovieListArea();
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -166,11 +170,35 @@ public class MovieAppGUI {
                 if (result == JOptionPane.YES_OPTION) {
                     movieDatabase.removeMovie(movieTitle);
                     updateMovieListArea();
-                    movieDatabase.saveMoviesToCSV("DataBase.csv");
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    private void newUserDialog() {
+        JTextField usernameField = new JTextField(20);
+        JPasswordField passwordField = new JPasswordField(20);
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Username:"));
+        panel.add(usernameField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passwordField);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Create New User", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            userManager.addUser(username, password);
+        }
+    }
+
+    private void deleteUserDialog() {
+        String username = JOptionPane.showInputDialog(frame, "Enter the username of the user to delete:");
+        if (username != null && !username.trim().isEmpty()) {
+            userManager.removeUser(username);
         }
     }
 
