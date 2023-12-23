@@ -18,9 +18,15 @@ public class MovieAppGUI {
     }
 
     private void initializeMovieTable() {
-        movieTableModel = new DefaultTableModel(new String[]{"Title", "Director", "Year", "Running Time"}, 0);
+        movieTableModel = new DefaultTableModel(new String[]{"Title", "Director", "Year", "Running Time"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         movieTable = new JTable(movieTableModel);
         movieTable.setFillsViewportHeight(true);
+        movieTable.getTableHeader().setReorderingAllowed(false);
     }
 
     private void showLoginScreen() {
