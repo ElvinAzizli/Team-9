@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MovieDatabase {
     private Map<String, Movie> movies;
@@ -33,6 +35,10 @@ public class MovieDatabase {
               .append(movie.getRunningTime()).append("min\n");
         }
         return sb.toString();
+    }
+
+    public List<Movie> getAllMoviesAsList() {
+        return new ArrayList<>(movies.values());
     }
 
     public void loadMoviesFromCSV(String filePath) {
@@ -79,6 +85,7 @@ public class MovieDatabase {
         movies.put(newMovie.getTitle(), newMovie);
     }
 }
+
 
 
 
