@@ -2,17 +2,21 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class MovieAppGUI {
     private MovieDatabase movieDatabase;
     private UserManager userManager;
+    private WatchlistManager watchlistManager;
     private JFrame frame;
     private JTable movieTable;
     private DefaultTableModel movieTableModel;
+    private String loggedInUser;
 
     public MovieAppGUI() {
         movieDatabase = new MovieDatabase();
         userManager = new UserManager();
+        watchlistManager = new WatchlistManager();
         initializeMovieTable();
         showLoginScreen();
     }
@@ -42,6 +46,7 @@ public class MovieAppGUI {
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener(e -> {
             if (userManager.authenticate(usernameField.getText(), new String(passwordField.getPassword()))) {
+                loggedInUser = usernameField.getText();
                 frame.dispose();
                 populateSampleData();
                 createAndShowGUI();
@@ -76,6 +81,7 @@ public class MovieAppGUI {
         inputPanel.add(createButton("Delete Movie", e -> deleteMovieDialog()));
         inputPanel.add(createButton("New User", e -> newUserDialog()));
         inputPanel.add(createButton("Delete User", e -> deleteUserDialog()));
+        inputPanel.add(createButton("Manage Watchlist", e -> manageWatchlistDialog()));
         frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
         frame.getContentPane().add(new JScrollPane(movieTable), BorderLayout.CENTER);
         updateMovieListArea();
@@ -105,66 +111,54 @@ public class MovieAppGUI {
         panel.add(timeField);
         int result = JOptionPane.showConfirmDialog(frame, panel, "Add a New Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            try {
-                String title = titleField.getText();
-                String director = directorField.getText();
-                int year = Integer.parseInt(yearField.getText());
-                int time = Integer.parseInt(timeField.getText());
-                Movie newMovie = new Movie(title, director, year, time);
-                movieDatabase.addMovie(newMovie);
-                updateMovieListArea();
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
-            }
+            String title = titleField.getText();
+            String director = directorField.getText();
+            int year = Integer.parseInt(yearField.getText());
+            int time = Integer.parseInt(timeField.getText());
+            Movie newMovie = new Movie(title, director, year, time);
+            movieDatabase.addMovie(newMovie);
+            updateMovieListArea();
         }
     }
 
     private void editMovieDialog() {
         String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to edit:");
-        if (movieTitle != null && !movieTitle.trim().isEmpty()) {
-            Movie movieToEdit = movieDatabase.getMovie(movieTitle);
-            if (movieToEdit != null) {
-                JTextField titleField = new JTextField(movieToEdit.getTitle(), 20);
-                JTextField directorField = new JTextField(movieToEdit.getDirector(), 20);
-                JTextField yearField = new JTextField(String.valueOf(movieToEdit.getReleaseYear()), 20);
-                JTextField timeField = new JTextField(String.valueOf(movieToEdit.getRunningTime()), 20);
-                JPanel panel = new JPanel(new GridLayout(0, 1));
-                panel.add(new JLabel("Title:"));
-                panel.add(titleField);
-                panel.add(new JLabel("Director:"));
-                panel.add(directorField);
-                panel.add(new JLabel("Year:"));
-                panel.add(yearField);
-                panel.add(new JLabel("Running Time:"));
-                panel.add(timeField);
-                int result = JOptionPane.showConfirmDialog(frame, panel, "Edit Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (result == JOptionPane.OK_OPTION) {
-                    try {
-                        movieDatabase.updateMovie(movieToEdit, new Movie(titleField.getText(), directorField.getText(), Integer.parseInt(yearField.getText()), Integer.parseInt(timeField.getText())));
-                        updateMovieListArea();
-                    } catch (NumberFormatException e) {
-                        JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
+        Movie movieToEdit = movieDatabase.getMovie(movieTitle);
+        if (movieToEdit != null) {
+            JTextField titleField = new JTextField(movieToEdit.getTitle(), 20);
+            JTextField directorField = new JTextField(movieToEdit.getDirector(), 20);
+            JTextField yearField = new JTextField(String.valueOf(movieToEdit.getReleaseYear()), 20);
+            JTextField timeField = new JTextField(String.valueOf(movieToEdit.getRunningTime()), 20);
+            JPanel panel = new JPanel(new GridLayout(0, 1));
+            panel.add(new JLabel("Title:"));
+            panel.add(titleField);
+            panel.add(new JLabel("Director:"));
+            panel.add(directorField);
+            panel.add(new JLabel("Year:"));
+            panel.add(yearField);
+            panel.add(new JLabel("Running Time:"));
+            panel.add(timeField);
+            int result = JOptionPane.showConfirmDialog(frame, panel, "Edit Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                movieDatabase.updateMovie(movieToEdit, new Movie(titleField.getText(), directorField.getText(), Integer.parseInt(yearField.getText()), Integer.parseInt(timeField.getText())));
+                updateMovieListArea();
             }
+        } else {
+            JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void deleteMovieDialog() {
         String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to delete:");
-        if (movieTitle != null && !movieTitle.trim().isEmpty()) {
-            Movie movie = movieDatabase.getMovie(movieTitle);
-            if (movie != null) {
-                int result = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete \"" + movieTitle + "\"?", "Delete Movie", JOptionPane.YES_NO_OPTION);
-                if (result == JOptionPane.YES_OPTION) {
-                    movieDatabase.removeMovie(movieTitle);
-                    updateMovieListArea();
-                }
-            } else {
-                JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
+        Movie movie = movieDatabase.getMovie(movieTitle);
+        if (movie != null) {
+            int result = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete \"" + movieTitle + "\"?", "Delete Movie", JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                movieDatabase.removeMovie(movieTitle);
+                updateMovieListArea();
             }
+        } else {
+            JOptionPane.showMessageDialog(frame, "Movie not found", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -186,9 +180,43 @@ public class MovieAppGUI {
 
     private void deleteUserDialog() {
         String username = JOptionPane.showInputDialog(frame, "Enter the username of the user to delete:");
-        if (username != null && !username.trim().isEmpty()) {
-            userManager.removeUser(username);
+        userManager.removeUser(username);
+    }
+
+    private void manageWatchlistDialog() {
+        List<String> watchlist = watchlistManager.getWatchlist(loggedInUser);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JComboBox<String> movieDropdown = new JComboBox<>();
+        for (Movie movie : movieDatabase.getAllMoviesAsList()) {
+            if (!watchlist.contains(movie.getTitle())) {
+                movieDropdown.addItem(movie.getTitle());
+            }
         }
+        JButton addButton = new JButton("Add to Watchlist");
+        addButton.addActionListener(e -> {
+            String selectedMovie = (String) movieDropdown.getSelectedItem();
+            if (selectedMovie != null) {
+                watchlistManager.addMovieToWatchlist(loggedInUser, selectedMovie);
+            }
+        });
+        JList<String> watchlistDisplay = new JList<>(watchlist.toArray(new String[0]));
+        JButton removeButton = new JButton("Remove from Watchlist");
+        removeButton.addActionListener(e -> {
+            String selectedMovie = watchlistDisplay.getSelectedValue();
+            if (selectedMovie != null) {
+                watchlistManager.removeMovieFromWatchlist(loggedInUser, selectedMovie);
+                watchlist.remove(selectedMovie);
+                watchlistDisplay.setListData(watchlist.toArray(new String[0]));
+            }
+        });
+        panel.add(new JLabel("Add Movie to Watchlist:"));
+        panel.add(movieDropdown);
+        panel.add(addButton);
+        panel.add(new JLabel("Your Watchlist:"));
+        panel.add(new JScrollPane(watchlistDisplay));
+        panel.add(removeButton);
+        JOptionPane.showMessageDialog(frame, panel, "Manage Watchlist", JOptionPane.PLAIN_MESSAGE);
     }
 
     private void updateMovieListArea() {
