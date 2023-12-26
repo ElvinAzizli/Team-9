@@ -26,6 +26,14 @@ public class UserManager {
         saveUsersToFile();
     }
 
+    public boolean userExists(String username) {
+        return users.containsKey(username);
+    }
+
+    public boolean isAdmin(String username) {
+        return "admin".equals(username);
+    }
+
     private void loadUsersFromFile() {
         File file = new File(filePath);
         if (!file.exists()) {
