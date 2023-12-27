@@ -1,7 +1,11 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MovieAppGUI {
@@ -67,14 +71,14 @@ public class MovieAppGUI {
         frame.add(loginButton, constraints);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-    }  
+    }
 
     private void createAndShowGUI() {
         frame = new JFrame("Movie Catalog");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 400);
+        frame.setSize(1200, 700);
         JPanel inputPanel = new JPanel(new FlowLayout());
-
+    
         if (isAdmin) {
             inputPanel.add(createButton("Add New Movie", e -> addMovieDialog()));
             inputPanel.add(createButton("Edit Movie", e -> editMovieDialog()));
@@ -82,9 +86,11 @@ public class MovieAppGUI {
             inputPanel.add(createButton("New User", e -> newUserDialog()));
             inputPanel.add(createButton("Delete User", e -> deleteUserDialog()));
         }
-
+    
         inputPanel.add(createButton("Manage Watchlist", e -> manageWatchlistDialog()));
-
+        inputPanel.add(createButton("Rearrange Columns", e -> rearrangeColumnsDialog()));
+        inputPanel.add(createButton("Sort Columns", e -> sortColumnsDialog()));
+    
         frame.getContentPane().add(inputPanel, BorderLayout.NORTH);
         frame.getContentPane().add(new JScrollPane(movieTable), BorderLayout.CENTER);
         updateMovieListArea();
@@ -112,22 +118,21 @@ public class MovieAppGUI {
         panel.add(yearField);
         panel.add(new JLabel("Running Time:"));
         panel.add(timeField);
-        int result = JOptionPane.showConfirmDialog(frame, panel, "Input", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Add New Movie", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 String title = titleField.getText();
                 String director = directorField.getText();
                 int year = Integer.parseInt(yearField.getText());
                 int time = Integer.parseInt(timeField.getText());
-                Movie newMovie = new Movie(title, director, year, time);
-                movieDatabase.addMovie(newMovie);
+                movieDatabase.addMovie(new Movie(title, director, year, time));
                 updateMovieListArea();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Year and Time must be numbers", "Input Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "Invalid input: Year and Running Time must be numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-    
+
     private void editMovieDialog() {
         String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to edit:");
         if (movieTitle != null) {
@@ -160,7 +165,7 @@ public class MovieAppGUI {
             }
         }
     }
-    
+
     private void deleteMovieDialog() {
         String movieTitle = JOptionPane.showInputDialog(frame, "Enter the title of the movie to delete:");
         if (movieTitle != null) {
@@ -215,12 +220,12 @@ public class MovieAppGUI {
                 watchlistManager.addMovieToWatchlist(loggedInUser, selectedMovie);
             }
         });
-    
+
         JList<String> watchlistDisplay = new JList<>(watchlist.toArray(new String[0]));
-    
+
         JScrollPane listScrollPane = new JScrollPane(watchlistDisplay);
         listScrollPane.setPreferredSize(new Dimension(300, 200));
-    
+
         panel.add(new JLabel("Add Movie to Watchlist:"));
         panel.add(movieDropdown);
         panel.add(addButton);
@@ -236,14 +241,109 @@ public class MovieAppGUI {
             }
         });
         panel.add(removeButton);
-    
+
         JOptionPane.showMessageDialog(frame, panel, "Manage Watchlist", JOptionPane.PLAIN_MESSAGE);
-    }     
+    }
 
     private void updateMovieListArea() {
         movieTableModel.setRowCount(0);
         for (Movie movie : movieDatabase.getAllMoviesAsList()) {
             movieTableModel.addRow(new Object[]{movie.getTitle(), movie.getDirector(), movie.getReleaseYear(), movie.getRunningTime()});
+        }
+    }
+
+    private void rearrangeColumnsDialog() {
+        String[] columnNames = {"Title", "Director", "Year", "Running Time"};
+        JComboBox<String> columnBox1 = new JComboBox<>(columnNames);
+        JComboBox<String> columnBox2 = new JComboBox<>(columnNames);
+        JComboBox<String> columnBox3 = new JComboBox<>(columnNames);
+        JComboBox<String> columnBox4 = new JComboBox<>(columnNames);
+    
+        columnBox1.setSelectedIndex(-1);
+        columnBox2.setSelectedIndex(-1);
+        columnBox3.setSelectedIndex(-1);
+        columnBox4.setSelectedIndex(-1);
+    
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Select new order for columns"));
+        panel.add(new JLabel("First Column"));
+        panel.add(columnBox1);
+        panel.add(new JLabel("Second Column"));
+        panel.add(columnBox2);
+        panel.add(new JLabel("Third Column"));
+        panel.add(columnBox3);
+        panel.add(new JLabel("Fourth Column"));
+        panel.add(columnBox4);
+    
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Rearrange Columns", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            rearrangeColumns(columnBox1, columnBox2, columnBox3, columnBox4);
+        }
+    }
+    
+    private void rearrangeColumns(JComboBox<String> columnBox1, JComboBox<String> columnBox2, JComboBox<String> columnBox3, JComboBox<String> columnBox4) {
+        TableColumn[] columns = new TableColumn[4];
+        columns[0] = movieTable.getColumnModel().getColumn(getColumnIndex(columnBox1.getSelectedItem().toString()));
+        columns[1] = movieTable.getColumnModel().getColumn(getColumnIndex(columnBox2.getSelectedItem().toString()));
+        columns[2] = movieTable.getColumnModel().getColumn(getColumnIndex(columnBox3.getSelectedItem().toString()));
+        columns[3] = movieTable.getColumnModel().getColumn(getColumnIndex(columnBox4.getSelectedItem().toString()));
+    
+        for (int i = 0; i < columns.length; i++) {
+            movieTable.getColumnModel().moveColumn(movieTable.convertColumnIndexToView(columns[i].getModelIndex()), i);
+        }
+    }    
+
+    private int getColumnIndex(String columnName) {
+        switch (columnName) {
+            case "Title": return 0;
+            case "Director": return 1;
+            case "Year": return 2;
+            case "Running Time": return 3;
+            default: return -1;
+        }
+    }
+
+    private void sortColumnsDialog() {
+        String[] columnNames = {"Title", "Director", "Year", "Running Time"};
+        JComboBox<String> columnDropdown = new JComboBox<>(columnNames);
+        String[] sortOptions = {"Ascending", "Descending"};
+        JComboBox<String> sortOrderDropdown = new JComboBox<>(sortOptions);
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Select Column to Sort:"));
+        panel.add(columnDropdown);
+        panel.add(new JLabel("Sort Order:"));
+        panel.add(sortOrderDropdown);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Sort Columns", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            sortTable(columnDropdown.getSelectedItem().toString(), sortOrderDropdown.getSelectedItem().toString().equals("Ascending"));
+        }
+    }
+
+    private void sortTable(String column, boolean isAscending) {
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(movieTableModel);
+        movieTable.setRowSorter(sorter);
+    
+        int columnIndex = getColumnIndex(column);
+        sorter.setComparator(columnIndex, getComparatorForColumn(column));
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(columnIndex, isAscending ? SortOrder.ASCENDING : SortOrder.DESCENDING));
+        sorter.setSortKeys(sortKeys);
+    }
+
+    private Comparator<?> getComparatorForColumn(String column) {
+        if ("Year".equals(column) || "Running Time".equals(column)) {
+            return new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    int num1 = o1.isEmpty() ? 0 : Integer.parseInt(o1.trim());
+                    int num2 = o2.isEmpty() ? 0 : Integer.parseInt(o2.trim());
+                    return Integer.compare(num1, num2);
+                }
+            };
+        } else {
+            return Comparator.naturalOrder();
         }
     }
 
