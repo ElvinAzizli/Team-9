@@ -9,51 +9,44 @@ import java.util.List;
 
 public class MovieDatabase {
     private Map<String, Movie> movies;
+    private final String filePath = "DataBase.csv";
 
     public MovieDatabase() {
         this.movies = new HashMap<>();
+        loadMoviesFromCSV();
     }
 
     public void addMovie(Movie movie) {
-        movies.putIfAbsent(movie.getTitle(), movie);
+        movies.put(movie.getTitle(), movie);
+        saveMoviesToCSV();
     }
 
     public void removeMovie(String title) {
         movies.remove(title);
+        saveMoviesToCSV();
     }
 
     public Movie getMovie(String title) {
         return movies.get(title);
     }
 
-    public String getAllMovies() {
-        StringBuilder sb = new StringBuilder();
-        for (Movie movie : movies.values()) {
-            sb.append(movie.getTitle()).append(" - ")
-              .append(movie.getDirector()).append(" - ")
-              .append(movie.getReleaseYear()).append(" - ")
-              .append(movie.getRunningTime()).append("min\n");
-        }
-        return sb.toString();
-    }
-
     public List<Movie> getAllMoviesAsList() {
         return new ArrayList<>(movies.values());
     }
 
-    public void loadMoviesFromCSV(String filePath) {
+    public void updateMovie(Movie oldMovie, Movie newMovie) {
+        if (oldMovie != null && movies.containsKey(oldMovie.getTitle())) {
+            movies.put(oldMovie.getTitle(), newMovie);
+            saveMoviesToCSV();
+        }
+    }
+
+    private void loadMoviesFromCSV() {
         try {
             File file = new File(filePath);
             Scanner scanner = new Scanner(file);
-            boolean isFirstLine = true;
-
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue;
-                }
-
                 String[] details = line.split(",");
                 if (details.length == 4) {
                     try {
@@ -67,7 +60,7 @@ public class MovieDatabase {
         }
     }
 
-    public void saveMoviesToCSV(String filePath) {
+    private void saveMoviesToCSV() {
         try {
             PrintWriter writer = new PrintWriter(new File(filePath));
             writer.println("Title,Director,ReleaseYear,RunningTime");
@@ -79,16 +72,4 @@ public class MovieDatabase {
             e.printStackTrace();
         }
     }
-
-    public void updateMovie(Movie oldMovie, Movie newMovie) {
-        movies.remove(oldMovie.getTitle());
-        movies.put(newMovie.getTitle(), newMovie);
-    }
 }
-
-
-
-
-
-
-
